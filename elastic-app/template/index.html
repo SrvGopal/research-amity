@@ -200,7 +200,7 @@ const demo = { r0:3.14, e2:14.4, Zm:1.15, A1:22.4, B1:9.8, A2:13.7, B2:6.1, f1:0
 const fields = Object.keys(defaults);
 const orderRank = { soec:1, toec:2, foec:3 };
 let currentOrder = 'foec';
-const CHART_SERVER = 'http://127.0.0.1:5001/chart';
+const CHART_SERVER = '/chart';
 
 function setTheme(mode) {
   document.documentElement.setAttribute('data-theme', mode);
