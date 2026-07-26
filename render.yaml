@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: elastic-calculator
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn elastic_chart_server:app
