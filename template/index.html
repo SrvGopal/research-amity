@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>elastic-calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root, [data-theme="light"] {
+  --bg:#eef1f6; --surface:#ffffff; --surface-2:#f4f7fb; --surface-3:#e7edf6;
+  --border:#d7dfeb; --text:#131b24; --muted:#5b6b7d;
+  --primary:#0c63c9; --primary-strong:#084a99; --ok:#1a8f5a;
+  --inverse:#f7faff; --shadow:0 10px 26px rgba(10,30,60,0.08);
+  --mono:'IBM Plex Mono', monospace; --font:'Inter', system-ui, sans-serif;
+}
+[data-theme="dark"] {
+  --bg:#0a0f16; --surface:#101720; --surface-2:#141d28; --surface-3:#182333;
+  --border:#233247; --text:#e7eef7; --muted:#93a4b8;
+  --primary:#4da3ff; --primary-strong:#7bbcff; --ok:#3ecf8e;
+  --inverse:#081018; --shadow:0 10px 26px rgba(0,0,0,0.4);
+}
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--text); font-family:var(--font); font-size:14px; line-height:1.4; -webkit-font-smoothing:antialiased; }
+button, input, select { font:inherit; color:inherit; }
+.shell { max-width:1600px; margin:0 auto; padding:16px; }
+.statusbar { display:flex; align-items:center; justify-content:space-between; gap:16px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:10px 16px; margin-bottom:12px; box-shadow:var(--shadow); font-family:var(--mono); font-size:12px; color:var(--muted); }
+.statusbar .left, .statusbar .right { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+.dot { width:8px; height:8px; border-radius:50%; background:var(--ok); box-shadow:0 0 0 3px color-mix(in srgb, var(--ok) 25%, transparent); }
+.badge { border:1px solid var(--border); border-radius:6px; padding:3px 8px; background:var(--surface-2); letter-spacing:.03em; }
+.badge.accent { color:var(--primary); border-color:color-mix(in srgb, var(--primary) 40%, var(--border)); }
+.masthead { display:flex; justify-content:space-between; align-items:center; gap:16px; background:linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%); border:1px solid var(--border); border-radius:12px; padding:16px 20px; margin-bottom:12px; box-shadow:var(--shadow); }
+.head-left { display:flex; align-items:center; gap:14px; }
+.insignia { width:42px; height:42px; border-radius:10px; background:linear-gradient(160deg, var(--primary), var(--primary-strong)); display:grid; place-items:center; color:var(--inverse); }
+.insignia svg { width:20px; height:20px; }
+.eyebrow { font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+h1 { margin:2px 0 0; font-size:1.25rem; font-weight:700; }
+.sub { margin-top:4px; color:var(--muted); font-size:.82rem; font-family:var(--mono); }
+.toolbar { display:flex; gap:8px; flex-wrap:wrap; }
+.btn { min-height:38px; padding:0 14px; border-radius:8px; border:1px solid var(--border); background:var(--surface-2); cursor:pointer; font-size:.84rem; }
+.btn:hover { background:var(--surface-3); }
+.btn.primary { background:var(--primary); color:var(--inverse); border-color:var(--primary); font-weight:600; }
+.btn.primary:hover { background:var(--primary-strong); }
+.btn.small { min-height:30px; padding:0 10px; font-size:.72rem; font-family:var(--mono); }
+.order-toggle { display:flex; gap:8px; margin-bottom:16px; }
+.order-btn { flex:1; min-height:38px; border:1px solid var(--border); border-radius:8px; background:var(--surface-2); cursor:pointer; font-family:var(--mono); font-size:.76rem; text-transform:uppercase; letter-spacing:.03em; }
+.order-btn.active { background:var(--primary); color:var(--inverse); border-color:var(--primary); font-weight:600; }
+.layout { display:grid; grid-template-columns:380px 1fr; gap:14px; }
+.panel, .section { background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow); overflow:hidden; }
+.panel::before, .section::before { content:''; display:block; height:3px; background:linear-gradient(90deg, var(--primary), transparent); }
+.panel { position:sticky; top:16px; align-self:start; }
+.panel-block { padding:18px 20px; border-bottom:1px solid var(--border); }
+.panel-block:last-child { border-bottom:0; }
+.title-row { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; }
+.title-row h2, .section h2 { margin:0; font-size:.88rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; position:relative; padding-left:12px; }
+.title-row h2::before, .section h2::before { content:''; position:absolute; left:0; top:50%; transform:translateY(-50%); width:3px; height:14px; background:var(--primary); border-radius:2px; }
+.meta { font-family:var(--mono); font-size:.72rem; color:var(--muted); }
+.fields { display:flex; flex-direction:column; gap:14px; }
+.field { display:grid; gap:6px; min-width:0; }
+.field.hidden-field { display:none; }
+.field-label-row { display:flex; justify-content:space-between; align-items:baseline; gap:12px; }
+.field label { font-size:.8rem; font-family:var(--mono); color:var(--text); letter-spacing:.02em; font-weight:600; }
+.field .hint { font-size:.68rem; font-family:var(--mono); color:var(--muted); }
+.field input { min-height:42px; width:100%; border:1px solid var(--border); border-radius:8px; background:var(--surface-2); padding:0 14px; font-family:var(--mono); font-size:.92rem; }
+.field input:focus-visible { outline:2px solid var(--primary); outline-offset:1px; border-color:var(--primary); }
+.field input::-webkit-outer-spin-button, .field input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+.field input[type=number] { -moz-appearance:textfield; }
+.derived-grid, .summary-strip { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.metric { border:1px solid var(--border); background:var(--surface-2); border-radius:8px; padding:10px 12px; position:relative; }
+.metric .k { font-size:.74rem; font-family:var(--mono); color:var(--muted); margin-bottom:5px; }
+.metric .v { font-size:.92rem; font-family:var(--mono); }
+.content { display:grid; gap:14px; }
+.summary-strip { grid-template-columns:repeat(4, minmax(0,1fr)); }
+.section-head { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 18px; background:var(--surface-2); border-bottom:1px solid var(--border); flex-wrap:wrap; }
+.section-head .right { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.section-head .tag { font-family:var(--mono); font-size:.72rem; color:var(--primary); border:1px solid color-mix(in srgb, var(--primary) 35%, var(--border)); border-radius:6px; padding:3px 9px; }
+.section.hidden-section { display:none; }
+.sweep-controls { display:flex; align-items:center; gap:6px; }
+.sweep-controls select, .sweep-controls input { min-height:30px; border:1px solid var(--border); border-radius:6px; background:var(--surface-2); padding:0 8px; font-family:var(--mono); font-size:.72rem; }
+.sweep-controls input { width:64px; }
+.results { display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:1px; background:var(--border); }
+.result { background:var(--surface); padding:14px 16px; min-height:80px; position:relative; }
+.result .name { font-size:.8rem; font-family:var(--mono); color:var(--muted); margin-bottom:6px; }
+.result .val { font-size:.94rem; font-family:var(--mono); word-break:break-word; }
+.chart-status { padding:8px 18px; font-size:.72rem; font-family:var(--mono); color:var(--muted); }
+.foot { padding:12px 18px; font-size:.72rem; font-family:var(--mono); color:var(--muted); border-top:1px solid var(--border); background:var(--surface-2); }
+@media (max-width:1160px) { .layout { grid-template-columns:1fr; } .panel { position:static; } .summary-strip { grid-template-columns:repeat(2, minmax(0,1fr)); } }
+@media (max-width:640px) { .masthead { flex-direction:column; align-items:flex-start; } .statusbar { flex-direction:column; align-items:flex-start; gap:6px; } .toolbar { width:100%; } .btn { flex:1 1 auto; } .derived-grid, .summary-strip { grid-template-columns:1fr; } .order-toggle { flex-direction:column; } }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="statusbar">
+    <div class="left"><span class="dot"></span><span class="badge accent">RUN-01</span><span class="badge">MODEL: ROCK SALT</span><span class="badge">STATUS: ACTIVE</span></div>
+    <div class="right"><span class="badge">EQ SET 4.32-4.69</span><span class="badge">UNITS: NORMALIZED</span></div>
+  </div>
+  <header class="masthead">
+    <div class="head-left">
+      <div class="insignia" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 18 12 5l7 13"></path><path d="M8.8 12h6.4"></path></svg></div>
+      <div><div class="eyebrow">Computational materials interface</div><h1>Elastic Constant Calculator</h1><div class="sub">SOEC - TOEC - FOEC - Pressure derivatives</div></div>
+    </div>
+    <div class="toolbar">
+      <button class="btn" type="button" data-theme-toggle>Light mode</button>
+      <button class="btn" type="button" id="fillBtn">Sample</button>
+      <button class="btn" type="button" id="resetBtn">Reset</button>
+      <button class="btn primary" type="button" id="calculateBtn">Calculate</button>
+    </div>
+  </header>
+  <div class="layout">
+    <aside class="panel">
+      <div class="panel-block">
+        <div class="title-row"><h2>Entry</h2><div class="meta">Input window</div></div>
+        <div class="order-toggle">
+          <button class="order-btn" data-order="soec">SOEC only</button>
+          <button class="order-btn" data-order="toec">Up to TOEC</button>
+          <button class="order-btn active" data-order="foec">Up to FOEC</button>
+        </div>
+        <div class="fields">
+          <div class="field" data-min-order="soec"><div class="field-label-row"><label>r0</label><span class="hint">equilibrium separation</span></div><input id="r0" type="number" step="any" value="3.14"></div>
+          <div class="field" data-min-order="soec"><div class="field-label-row"><label>e2</label><span class="hint">charge term</span></div><input id="e2" type="number" step="any" value="14.4"></div>
+          <div class="field" data-min-order="soec"><div class="field-label-row"><label>Zm</label><span class="hint">Madelung-type constant</span></div><input id="Zm" type="number" step="any" value="1.15"></div>
+          <div class="field" data-min-order="soec"><div class="field-label-row"><label>xi2</label><span class="hint">deformation parameter</span></div><input id="xi2" type="number" step="any" value="0.09"></div>
+          <div class="field" data-min-order="soec"><div class="field-label-row"><label>A1</label><span class="hint">first-neighbor term</span></div><input id="A1" type="number" step="any" value="22.4"></div>
+          <div class="field" data-min-order="toec"><div class="field-label-row"><label>B1</label><span class="hint">first-neighbor term</span></div><input id="B1" type="number" step="any" value="9.8"></div>
+          <div class="field" data-min-order="soec"><div class="field-label-row"><label>A2</label><span class="hint">second-neighbor term</span></div><input id="A2" type="number" step="any" value="13.7"></div>
+          <div class="field" data-min-order="soec"><div class="field-label-row"><label>B2</label><span class="hint">second-neighbor term</span></div><input id="B2" type="number" step="any" value="6.1"></div>
+          <div class="field" data-min-order="toec"><div class="field-label-row"><label>f0 first deriv</label><span class="hint">first derivative</span></div><input id="f1" type="number" step="any" value="0.028"></div>
+          <div class="field" data-min-order="foec"><div class="field-label-row"><label>f0 second deriv</label><span class="hint">second derivative</span></div><input id="f2" type="number" step="any" value="0.011"></div>
+          <div class="field" data-min-order="foec"><div class="field-label-row"><label>f0 third deriv</label><span class="hint">third derivative</span></div><input id="f3" type="number" step="any" value="0.004"></div>
+        </div>
+      </div>
+      <div class="panel-block"><div class="title-row"><h2>Derived</h2><div class="meta">Computed window</div></div><div class="derived-grid" id="derivedMini"></div></div>
+    </aside>
+    <main class="content">
+      <section class="summary-strip" id="summaryStats"></section>
+      <section class="section" data-min-order="soec" id="soecSection">
+        <div class="section-head"><h2>SOEC</h2>
+          <div class="right"><span class="tag">Eq. 4.32-4.36</span>
+            <div class="sweep-controls">
+              <select data-sweep-param="soec"><option value="Zm">Zm</option><option value="r0">r0</option><option value="A1">A1</option><option value="A2">A2</option></select>
+              <input type="number" data-sweep-min="soec" value="0.5" step="any">
+              <input type="number" data-sweep-max="soec" value="2.0" step="any">
+            </div>
+            <button class="btn small" data-chart="SOEC">Download chart</button>
+          </div>
+        </div>
+        <div class="results" id="soecGrid"></div>
+        <div class="chart-status" id="soecStatus"></div>
+      </section>
+      <section class="section" data-min-order="toec" id="toecSection">
+        <div class="section-head"><h2>TOEC</h2>
+          <div class="right"><span class="tag">Eq. 4.44-4.49</span>
+            <div class="sweep-controls">
+              <select data-sweep-param="toec"><option value="f1">f0 first deriv</option><option value="Zm">Zm</option><option value="r0">r0</option></select>
+              <input type="number" data-sweep-min="toec" value="0" step="any">
+              <input type="number" data-sweep-max="toec" value="0.06" step="any">
+            </div>
+            <button class="btn small" data-chart="TOEC">Download chart</button>
+          </div>
+        </div>
+        <div class="results" id="toecGrid"></div>
+        <div class="chart-status" id="toecStatus"></div>
+      </section>
+      <section class="section" data-min-order="foec" id="foecSection">
+        <div class="section-head"><h2>FOEC</h2>
+          <div class="right"><span class="tag">Eq. 4.50-4.60</span>
+            <div class="sweep-controls">
+              <select data-sweep-param="foec"><option value="f2">f0 second deriv</option><option value="f3">f0 third deriv</option><option value="Zm">Zm</option></select>
+              <input type="number" data-sweep-min="foec" value="0" step="any">
+              <input type="number" data-sweep-max="foec" value="0.03" step="any">
+            </div>
+            <button class="btn small" data-chart="FOEC">Download chart</button>
+          </div>
+        </div>
+        <div class="results" id="foecGrid"></div>
+        <div class="chart-status" id="foecStatus"></div>
+      </section>
+      <section class="section" data-min-order="foec" id="pressureSection">
+        <div class="section-head"><h2>Pressure derivatives</h2>
+          <div class="right"><span class="tag">Eq. 4.61-4.69</span>
+            <div class="sweep-controls">
+              <select data-sweep-param="pressure"><option value="f1">f0 first deriv</option><option value="Zm">Zm</option><option value="r0">r0</option></select>
+              <input type="number" data-sweep-min="pressure" value="0" step="any">
+              <input type="number" data-sweep-max="pressure" value="0.06" step="any">
+            </div>
+            <button class="btn small" data-chart="PRESSURE">Download chart</button>
+          </div>
+        </div>
+        <div class="results" id="pressureGrid"></div>
+        <div class="chart-status" id="pressureStatus"></div>
+        <div class="foot">Eq. 4.63 follows extracted PDF text; verify against source page image before final use. Chart server must be running at 127.0.0.1:5001.</div>
+      </section>
+    </main>
+  </div>
+</div>
+<script>
+const defaults = { r0:1, e2:1, Zm:1, A1:0, B1:0, A2:0, B2:0, f1:0, f2:0, f3:0, xi2:0 };
+const demo = { r0:3.14, e2:14.4, Zm:1.15, A1:22.4, B1:9.8, A2:13.7, B2:6.1, f1:0.028, f2:0.011, f3:0.004, xi2:0.09 };
+const fields = Object.keys(defaults);
+const orderRank = { soec:1, toec:2, foec:3 };
+let currentOrder = 'foec';
+const CHART_SERVER = 'http://127.0.0.1:5001/chart';
+
+function setTheme(mode) {
+  document.documentElement.setAttribute('data-theme', mode);
+  document.querySelector('[data-theme-toggle]').textContent = mode === 'dark' ? 'Light mode' : 'Dark mode';
+}
+setTheme('dark');
+document.querySelector('[data-theme-toggle]').addEventListener('click', function() {
+  setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+});
+
+function applyOrder(order) {
+  currentOrder = order;
+  document.querySelectorAll('.order-btn').forEach(function(b) { b.classList.toggle('active', b.dataset.order === order); });
+  document.querySelectorAll('[data-min-order]').forEach(function(el) {
+    const needed = orderRank[el.dataset.minOrder];
+    const active = orderRank[order];
+    const show = needed <= active;
+    if (el.classList.contains('field')) el.classList.toggle('hidden-field', !show);
+    if (el.classList.contains('section')) el.classList.toggle('hidden-section', !show);
+  });
+  calculate();
+}
+document.querySelectorAll('.order-btn').forEach(function(b) { b.addEventListener('click', function() { applyOrder(b.dataset.order); }); });
+
+function getNum(id) {
+  const el = document.getElementById(id);
+  if (!el || el.closest('.hidden-field')) return 0;
+  const v = parseFloat(el.value);
+  return Number.isFinite(v) ? v : 0;
+}
+function safeDivide(a, b) { return b === 0 ? NaN : a / b; }
+function fmt(v) {
+  if (!Number.isFinite(v)) return 'Undefined';
+  const a = Math.abs(v);
+  if ((a !== 0 && a < 1e-4) || a >= 1e6) return v.toExponential(6);
+  return v.toFixed(6);
+}
+function setValues(obj) { fields.forEach(function(k) { document.getElementById(k).value = obj[k]; }); calculate(); }
+function renderGrid(id, items) {
+  document.getElementById(id).innerHTML = items.map(function(pair) {
+    return '<div class="result"><div class="name">' + pair[0] + '</div><div class="val">' + fmt(pair[1]) + '</div></div>';
+  }).join('');
+}
+function renderMini(id, items) {
+  document.getElementById(id).innerHTML = items.map(function(pair) {
+    return '<div class="metric"><div class="k">' + pair[0] + '</div><div class="v">' + fmt(pair[1]) + '</div></div>';
+  }).join('');
+}
+
+function calculate() {
+  const r0 = getNum('r0'), e2 = getNum('e2'), Zm = getNum('Zm'), A1 = getNum('A1'), B1 = getNum('B1'),
+        A2 = getNum('A2'), B2 = getNum('B2'), f1 = getNum('f1'), f2 = getNum('f2'), f3 = getNum('f3'), xi2 = getNum('xi2');
+  const Zm2 = Zm * Zm;
+  const C1 = safeDivide(A1 * A1, B1);
+  const D1 = safeDivide(A1 * A1 * A1, B1 * B1);
+  const C2 = safeDivide(A2 * A2, B2);
+  const D2 = safeDivide(A2 * A2 * A2, B2 * B2);
+  const R2p = (D2 - 6 * C2 + 15 * A2 - 15 * B2) / 16;
+  const P = safeDivide(e2, 4 * Math.pow(r0, 4));
+  const C11 = P * (-5.112 * Zm2 + A1 + 0.5 * A2 + 0.5 * B2 + 9.3204 * xi2);
+  const C12 = P * (0.226 * Zm2 - B1 + 0.25 * A2 - 1.25 * B2 + 9.3204 * xi2);
+  const C44 = P * (2.556 * Zm2 + B1 + 0.25 * A2 + 0.75 * B2);
+  const eq435 = -(1.165 * Zm2);
+  const K = (C11 + 2 * C12) / 3;
+  renderMini('derivedMini', [['P', P], ['C1', C1], ['D1', D1], ['C2', C2], ['D2', D2], ['R2p', R2p], ['K', K]]);
+  renderMini('summaryStats', [['K', K], ['P', P], ['Eq. 4.35', eq435]]);
+  renderGrid('soecGrid', [['C11', C11], ['C12', C12], ['C44', C44], ['K', K], ['Eq. 4.35', eq435], ['P', P]]);
+
+  if (orderRank[currentOrder] >= orderRank.toec) {
+    const C111 = P * (37.556 * Zm2 + D1 - 3 * C1 + 0.25 * (C2 - 3 * A2 - 9 * B2) + 13.98 * r0 * r0 * f2 - 89.303 * r0 * f1);
+    const C112 = P * (-4.836 * Zm2 + 0.125 * (C2 - 3 * A2 - 3 * B2) + 4.660 * r0 * r0 * f2 - 18.640 * r0 * f1);
+    const C166 = P * (-7.166 * Zm2 - 2 * (B1 + B2) + 0.125 * (C2 - 3 * A2 + 3 * B2) + 5.564 * r0 * f1);
+    const C123 = P * (2.717 * Zm2 + 16.692 * r0 * f1);
+    const C144 = P * (2.717 * Zm2 + 5.564 * r0 * f1);
+    const C456 = P * (2.717 * Zm2);
+    renderGrid('toecGrid', [['C111', C111], ['C112', C112], ['C166', C166], ['C123', C123], ['C144', C144], ['C456', C456]]);
+
+    if (orderRank[currentOrder] >= orderRank.foec) {
+      const C1111 = P * (-305.321 * Zm2 + D1 - 6 * C1 + 15 * A1 + 2 * R2p - 11.25 * B2 + 18.6407 * Math.pow(r0, 3) * f3 - 206.574 * r0 * r0 * f2 + 863.498 * r0 * f1);
+      const C1112 = P * (17.9034 * Zm2 + R2p + 4.6602 * Math.pow(r0, 3) * f3 + 2.7116 * r0 * r0 * f2 + 103.489 * r0 * f1);
+      const C1166 = P * (27.2234 * Zm2 + 8 * (B1 + B2) + R2p + 5.564 * r0 * r0 * f2 - 44.2513 * r0 * f1);
+      const C1122 = P * (22.4611 * Zm2 + R2p - 50.2166 * r0 * r0 * f2 - 27.158 * r0 * f1);
+      const C1266 = P * (27.1211 * Zm2 + 4 * (B1 + B2) + R2p - 38.6873 * r0 * f1);
+      const C4444 = P * (32.9562 * Zm2 + 9 * (B1 + B2) + R2p + 10.2242 * r0 * r0 * f2 - 10.2242 * r0 * f1);
+      const C1123 = P * (-6.3406 * Zm2 + 5.564 * r0 * r0 * f2 - 22.5157 * r0 * f1);
+      const C1144 = P * (-6.3406 * Zm2 + 5.564 * r0 * r0 * f2 + 16.692 * r0 * f1);
+      const C1244 = P * (-6.3406 * Zm2 - 8.4746 * r0 * f1);
+      const C1456 = P * (-6.3406 * Zm2 + 10.8678 * r0 * f1);
+      const C4466 = P * (-4.0106 * Zm2 + 2 * (B1 + B2) + 10.2242 * r0 * r0 * f2 - 10.2229 * r0 * f1);
+      renderGrid('foecGrid', [['C1111', C1111], ['C1112', C1112], ['C1166', C1166], ['C1122', C1122], ['C1266', C1266], ['C4444', C4444], ['C1123', C1123], ['C1144', C1144], ['C1244', C1244], ['C1456', C1456], ['C4466', C4466], ['R2p', R2p]]);
+
+      const Omega = -2.33 * Zm2 + A1 + A2 + 27.961 * r0 * f1;
+      const dK_dP = safeDivide(-(13.975 * Zm2 + C1 - 3 * A1 + C2 - 3 * A2 - 167.764 * r0 * f1 + 41.94 * r0 * r0 * f2), 3 * Omega);
+      const dS_dP = safeDivide(-(23.676 * Zm2 + C1 + (C2 + 6 * A2 - 6 * B2) / 4 - 51.07584 * r0 * f1 + 13.98 * r0 * r0 * f2), 2 * Omega);
+      const dC44_dP = safeDivide(-(-11.389 * Zm2 + A1 - 3 * B1 + (C2 + 2 * A2 - 10 * B2) / 4 + 44.6524 * r0 * r0 * f1), Omega);
+      const dC111_dP = safeDivide(-(-3 * C11 - 6 * C12 + 3 * C111 + C1111 + 2 * C1112), 3 * K);
+      const dC112_dP = safeDivide(-(C11 + 2 * C12 + 3 * C112 + C1112 + C1122 + C1123), 3 * K);
+      const dC166_dP = safeDivide(-(-C11 - 2 * C12 + 3 * C166 + C1166 + 2 * C1244), 3 * K);
+      const dC123_dP = safeDivide(-(-C11 - 2 * C12 + 3 * C123 + 3 * C1123), 3 * K);
+      const dC144_dP = safeDivide(-(C11 + 2 * C12 + 3 * C144 + C1144 + 2 * C1244), 3 * K);
+      const dC456_dP = safeDivide(-(-C11 - 2 * C12 + 3 * C456 + 3 * C1456), 3 * K);
+      renderGrid('pressureGrid', [['dK_dP', dK_dP], ['dS_dP', dS_dP], ['dC44_dP', dC44_dP], ['dC111_dP', dC111_dP], ['dC112_dP', dC112_dP], ['dC166_dP', dC166_dP], ['dC123_dP', dC123_dP], ['dC144_dP', dC144_dP], ['dC456_dP', dC456_dP]]);
+    }
+  }
+}
+
+document.getElementById('calculateBtn').addEventListener('click', calculate);
+document.getElementById('resetBtn').addEventListener('click', function() { setValues(defaults); });
+document.getElementById('fillBtn').addEventListener('click', function() { setValues(demo); });
+fields.forEach(function(id) { document.getElementById(id).addEventListener('input', calculate); });
+
+async function downloadPublicationChart(family) {
+  const key = family.toLowerCase();
+  const statusEl = document.getElementById(key + 'Status');
+  const sweepParam = document.querySelector('[data-sweep-param="' + key + '"]').value;
+  const sweepMin = parseFloat(document.querySelector('[data-sweep-min="' + key + '"]').value);
+  const sweepMax = parseFloat(document.querySelector('[data-sweep-max="' + key + '"]').value);
+  const inputs = { r0:getNum('r0'), e2:getNum('e2'), Zm:getNum('Zm'), A1:getNum('A1'), B1:getNum('B1'), A2:getNum('A2'), B2:getNum('B2'), f1:getNum('f1'), f2:getNum('f2'), f3:getNum('f3'), xi2:getNum('xi2') };
+  statusEl.textContent = 'Generating chart...';
+  try {
+    const res = await fetch(CHART_SERVER, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sweep_param: sweepParam, sweep_min: sweepMin, sweep_max: sweepMax, family: family, inputs: inputs })
+    });
+    if (!res.ok) throw new Error('Server error ' + res.status);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = family.toLowerCase() + '_vs_' + sweepParam + '.png';
+    a.click();
+    URL.revokeObjectURL(url);
+    statusEl.textContent = 'Downloaded ' + a.download;
+  } catch (err) {
+    statusEl.textContent = 'Chart server not reachable at 127.0.0.1:5001. Start it and retry.';
+  }
+}
+document.querySelectorAll('[data-chart]').forEach(function(btn) { btn.addEventListener('click', function() { downloadPublicationChart(btn.dataset.chart); }); });
+applyOrder('foec');
+</script>
+</body>
+</html>
