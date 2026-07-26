@@ -127,5 +127,4 @@ def chart():
     return send_file(buf, mimetype="image/png", as_attachment=True, download_name=fname)
 
 
-if __name__ == "__main__":
-    app.run(port=5001, debug=True)
+
