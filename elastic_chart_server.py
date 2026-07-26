@@ -1,18 +1,20 @@
 
-from flask import Flask, request, send_file, render_template
+from flask import Flask, request, send_file, Response
 from flask_cors import CORS
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import io
+from pathlib import Path
 
 app = Flask(__name__)
 CORS(app)
 
 @app.route("/")
 def index():
-  return render_template("index.html")
+  html = Path("templates/index.html").read_text(encoding = "utf-8")
+  return Response(html,mimetype = "text.html")
 plt.rcParams.update({
     "font.size": 13, "axes.labelsize": 14, "axes.titlesize": 14,
     "legend.fontsize": 11, "xtick.labelsize": 12, "ytick.labelsize": 12,
